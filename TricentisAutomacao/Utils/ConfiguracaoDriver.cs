@@ -3,7 +3,6 @@ using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
 using WebDriverManager;
 using WebDriverManager.DriverConfigs.Impl;
 
@@ -29,17 +28,12 @@ namespace TricentisAutomacao.Utils
                 {
                     Console.WriteLine("Configurando ChromeDriver...");
 
-                    // Caminho para a pasta 'drivers'
+                    // Caminho para o chromedriver.exe na pasta drivers
                     string driverPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "drivers");
                     Console.WriteLine($"Procurando ChromeDriver em: {driverPath}");
 
-                    // Determina o nome correto do executável dependendo do sistema operacional
-                    string driverFileName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                        ? "chromedriver.exe"
-                        : "chromedriver";
-
-                    string chromeDriverExe = Path.Combine(driverPath, driverFileName);
-
+                    // Verifica se o arquivo chromedriver.exe existe
+                    string chromeDriverExe = Path.Combine(driverPath, "chromedriver.exe");
                     if (File.Exists(chromeDriverExe))
                     {
                         Console.WriteLine($"ChromeDriver encontrado: {chromeDriverExe}");
@@ -47,28 +41,29 @@ namespace TricentisAutomacao.Utils
                     else
                     {
                         Console.WriteLine($"AVISO: ChromeDriver não encontrado em {chromeDriverExe}");
-                        Console.WriteLine("Tentando baixar automaticamente usando WebDriverManager...");
 
+                        // Tenta usar o WebDriverManager para baixar o ChromeDriver automaticamente
                         try
                         {
+                            // Usa a sintaxe correta do WebDriverManager
                             new DriverManager().SetUpDriver(new ChromeConfig());
-                            Console.WriteLine("ChromeDriver baixado com sucesso.");
+                            Console.WriteLine("ChromeDriver baixado automaticamente pelo WebDriverManager");
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"Erro ao baixar o ChromeDriver: {ex.Message}");
+                            Console.WriteLine($"Erro ao baixar ChromeDriver: {ex.Message}");
                         }
                     }
 
                     var chromeOptions = new ChromeOptions();
 
-                    // Modo headless se a variável de ambiente "CHROME_HEADLESS" estiver definida
+                    // Verifica se deve executar em modo headless (sem interface gráfica)
                     bool headless = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CHROME_HEADLESS"));
 
                     if (headless)
                     {
-                        Console.WriteLine("Executando em modo headless.");
-                        chromeOptions.AddArgument("--headless=new"); // Melhor compatibilidade
+                        Console.WriteLine("Executando Chrome em modo headless");
+                        chromeOptions.AddArgument("--headless");
                         chromeOptions.AddArgument("--disable-gpu");
                         chromeOptions.AddArgument("--window-size=1920,1080");
                     }
@@ -77,32 +72,27 @@ namespace TricentisAutomacao.Utils
                         chromeOptions.AddArgument("--start-maximized");
                     }
 
-                    // Configurações adicionais para evitar erros em ambientes CI/CD
                     chromeOptions.AddArgument("--disable-notifications");
+
+                    // Configurações adicionais para lidar com problemas de compatibilidade
                     chromeOptions.AddArgument("--no-sandbox");
                     chromeOptions.AddArgument("--disable-dev-shm-usage");
 
-                    // Cria serviço apontando para o caminho do driver
+                    // Configura o serviço do ChromeDriver com o caminho para a pasta drivers
                     var service = ChromeDriverService.CreateDefaultService(driverPath);
                     service.SuppressInitialDiagnosticInformation = true;
 
-                    Console.WriteLine("Iniciando ChromeDriver...");
+                    Console.WriteLine($"Iniciando o Chrome WebDriver usando o driver em: {driverPath}");
                     _driver = new ChromeDriver(service, chromeOptions);
                     _driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
                     _wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(30));
-
-                    Console.WriteLine("Chrome WebDriver iniciado com sucesso.");
+                    Console.WriteLine("Chrome WebDriver iniciado com sucesso!");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Erro ao inicializar o ChromeDriver:");
-                    Console.WriteLine(ex.Message);
-                    Console.WriteLine(ex.ToString());
-
-                    throw new Exception(
-                        "Falha ao iniciar o ChromeDriver. Verifique se o Google Chrome está instalado e se o chromedriver está presente na pasta 'drivers'.",
-                        ex
-                    );
+                    Console.WriteLine($"Erro ao inicializar o ChromeDriver: {ex.Message}");
+                    Console.WriteLine($"Detalhes: {ex.ToString()}");
+                    throw new Exception("Não foi possível inicializar o ChromeDriver. Verifique se o Chrome está instalado corretamente e se o chromedriver.exe está na pasta 'drivers'.", ex);
                 }
             }
 
@@ -112,12 +102,12 @@ namespace TricentisAutomacao.Utils
         /// <summary>
         /// Obtém a instância atual do driver
         /// </summary>
-        public static IWebDriver Driver => _driver ?? throw new NullReferenceException("O driver ainda não foi inicializado.");
+        public static IWebDriver Driver => _driver ?? throw new NullReferenceException("O driver não foi inicializado.");
 
         /// <summary>
         /// Obtém a instância de espera explícita
         /// </summary>
-        public static WebDriverWait Wait => _wait ?? throw new NullReferenceException("O WebDriverWait ainda não foi inicializado.");
+        public static WebDriverWait Wait => _wait ?? throw new NullReferenceException("O wait não foi inicializado.");
 
         /// <summary>
         /// Encerra o driver e libera os recursos
@@ -126,11 +116,9 @@ namespace TricentisAutomacao.Utils
         {
             if (_driver != null)
             {
-                Console.WriteLine("Encerrando o ChromeDriver...");
                 _driver.Quit();
                 _driver = null;
                 _wait = null;
-                Console.WriteLine("ChromeDriver encerrado com sucesso.");
             }
         }
     }
