@@ -13,10 +13,10 @@ jobs:
     
     steps:
     - name: Checkout do código
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       
     - name: Configurar .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '6.0.x'
         
@@ -57,14 +57,14 @@ jobs:
         CHROME_HEADLESS: 1
         
     - name: Publicar resultados de teste
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: test-results
         path: TestResults/
         
     - name: Publicar relatórios
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: test-reports
