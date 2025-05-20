@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <StartupObject>TricentisAutomacao.Program</StartupObject>
+    <OutputType>Exe</OutputType>
+    <PreserveCompilationContext>true</PreserveCompilationContext>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DotNetSeleniumExtras.WaitHelpers" Version="3.11.0" />
+    <PackageReference Include="ExtentReports" Version="4.1.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
+    <PackageReference Include="Selenium.Support" Version="4.12.4" />
+    <PackageReference Include="Selenium.WebDriver" Version="4.12.4" />
+    <PackageReference Include="SpecFlow" Version="3.9.74" />
+    <PackageReference Include="SpecFlow.NUnit" Version="3.9.74" />
+    <PackageReference Include="SpecFlow.Tools.MsBuild.Generation" Version="3.9.74" />
+    <PackageReference Include="NUnit" Version="3.13.3" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+    <PackageReference Include="WebDriverManager" Version="2.17.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="drivers\chromedriver.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include=".github\workflows\ci.yml" />
+  </ItemGroup>
+
+  <!-- Garante que as pastas Evidencias e Relatorios sejam criadas na saída -->
+  <Target Name="CreateFolders" AfterTargets="Build">
+    <MakeDir Directories="$(OutputPath)Evidencias" Condition="!Exists('$(OutputPath)Evidencias')" />
+    <MakeDir Directories="$(OutputPath)Relatorios" Condition="!Exists('$(OutputPath)Relatorios')" />
+  </Target>
+
+</Project>
