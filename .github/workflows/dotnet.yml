@@ -34,12 +34,11 @@ jobs:
       - name: Verificar versão do Chrome
         run: google-chrome --version
 
-      - name: Baixar ChromeDriver compatível (com fallback)
+      - name: Baixar ChromeDriver compatível com o Chrome instalado
         run: |
           CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d. -f1)
-          echo "Chrome major version: $CHROME_VERSION"
+          echo "Versão principal do Chrome: $CHROME_VERSION"
           mkdir -p drivers
-
           if wget -q "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION" -O chrome_version.txt; then
             CHROMEDRIVER_VERSION=$(cat chrome_version.txt)
           else
@@ -47,8 +46,7 @@ jobs:
             wget -q "https://chromedriver.storage.googleapis.com/LATEST_RELEASE" -O chrome_version.txt
             CHROMEDRIVER_VERSION=$(cat chrome_version.txt)
           fi
-
-          echo "ChromeDriver version: $CHROMEDRIVER_VERSION"
+          echo "Versão do ChromeDriver: $CHROMEDRIVER_VERSION"
           wget -q "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip"
           unzip -o chromedriver_linux64.zip -d drivers/
           chmod +x drivers/chromedriver
@@ -58,22 +56,22 @@ jobs:
         run: |
           mkdir -p Relatorios
           mkdir -p Evidencias
-          dotnet test --configuration Release --no-build --verbosity normal
+          dotnet test --configuration Release --no-build --verbosity normal --logger:"trx;LogFileName=TestResults.trx"
         env:
           CHROME_HEADLESS: 1
 
-      - name: Publicar resultados de teste
+      - name: Publicar resultados de teste (TRX)
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results
-          path: TestResults/
+          path: '**/TestResults/*.trx'
 
-      - name: Publicar relatórios
+      - name: Publicar relatórios e evidências
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-reports
+          name: test-artifacts
           path: |
             Relatorios/
             Evidencias/
